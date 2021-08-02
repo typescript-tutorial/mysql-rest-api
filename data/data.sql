@@ -1,6 +1,6 @@
 create table users (
-  id character (40) NOT NULL,
-  username character (120) NOT NULL,
+  id character (40) not null,
+  username character (120) not null,
   email character (120),
   phone character (45),
   date_of_birth date,

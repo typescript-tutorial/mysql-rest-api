@@ -1,4 +1,4 @@
-import {Pool,format} from 'mysql';
+import { format, Pool } from 'mysql';
 
 export interface StringMap {
   [key: string]: string;
@@ -46,41 +46,43 @@ export class PoolManager implements Manager {
 }
 export function execute(pool: Pool, statements: Statement[]): Promise<number> {
   return new Promise<number>((resolve, reject) => {
-    pool.getConnection((err, connection) => {
-      connection.beginTransaction((err) => {
-        if (err) {                  
+    pool.getConnection((er0, connection) => {
+      if (er0) {
+        return reject(er0);
+      }
+      connection.beginTransaction(er1 => {
+        if (er1) {
           connection.rollback(() => {
-            return reject(err);
+            return reject(er1);
           });
-        }
-        else{
+        } else {
           let queries = '';
           statements.forEach(item => {
-            queries += format(item.query, item.args)
+            queries += format(item.query, item.args);
           });
           console.log(queries);
-          connection.query(queries, (err, results) => {
-            if (err) {        
+          connection.query(queries, (er2, results) => {
+            if (er2) {
               connection.rollback(() => {
-              return reject(err);
+                return reject(er2);
               });
-            } else{
-              connection.commit((err) => {
-                if (err) {
+            } else {
+              connection.commit((er3) => {
+                if (er3) {
                   connection.rollback(() => {
-                    return reject(err);
+                    return reject(er3);
                   });
                 }
               });
               let c = 0;
-              results.forEach(((x: { affectedRows: number; }) => c += x.affectedRows ));
+              results.forEach(((x: { affectedRows: number; }) => c += x.affectedRows));
               return resolve(c);
             }
           });
         }
       });
     });
-  })
+  });
 }
 export function exec(pool: Pool, sql: string, args?: any[]): Promise<number> {
   const p = toArray(args);
