@@ -1,4 +1,4 @@
-import { format, Pool } from 'mysql';
+import {Pool} from 'mysql2/promise';
 
 export interface StringMap {
   [key: string]: string;
@@ -44,68 +44,39 @@ export class PoolManager implements Manager {
     return count(this.pool, sql, args);
   }
 }
-export function execute(pool: Pool, statements: Statement[]): Promise<number> {
-  return new Promise<number>((resolve, reject) => {
-    pool.getConnection((er0, connection) => {
-      if (er0) {
-        return reject(er0);
-      }
-      connection.beginTransaction(er1 => {
-        if (er1) {
-          connection.rollback(() => {
-            return reject(er1);
-          });
-        } else {
-          let queries = '';
-          statements.forEach(item => {
-            queries += format(item.query, item.args);
-          });
-          console.log(queries);
-          connection.query(queries, (er2, results) => {
-            if (er2) {
-              connection.rollback(() => {
-                return reject(er2);
-              });
-            } else {
-              connection.commit((er3) => {
-                if (er3) {
-                  connection.rollback(() => {
-                    return reject(er3);
-                  });
-                }
-              });
-              let c = 0;
-              results.forEach(((x: { affectedRows: number; }) => c += x.affectedRows));
-              return resolve(c);
-            }
-          });
-        }
-      });
-    });
-  });
+export async function execute(pool: Pool, statements: Statement[]): Promise<number> {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const arrPromise = statements.map((item) => connection.query(item.query, item.args ? item.args : []));
+    await Promise.all(arrPromise)
+    await connection.commit();
+    return 1;
+    
+  }catch (e) {
+    await connection.rollback();
+    throw e;
+  }
+   finally{
+    connection.release();
+  }
 }
 export function exec(pool: Pool, sql: string, args?: any[]): Promise<number> {
   const p = toArray(args);
   return new Promise<number>((resolve, reject) => {
-    return pool.query(sql, p, (err, results) => {
-      if (err) {
-        return reject(err);
-      } else {
-        return resolve(results.affectedRows);
-      }
-    });
-  });
+    return pool.query(sql, p).then((results) => {
+      resolve(1);
+    })
+    .catch(err => reject(err))
+  })
 }
 export function query<T>(pool: Pool, sql: string, args?: any[], m?: StringMap, fields?: string[]): Promise<T[]> {
   const p = toArray(args);
   return new Promise<T[]>((resolve, reject) => {
-    return pool.query(sql, p, (err, results) => {
-      if (err) {
-        return reject(err);
-      } else {
-        return resolve(handleResults(results, m, fields));
-      }
-    });
+    return pool.query(sql, p).then(results =>{
+      resolve(handleResults<any>(results[0] as any, m,fields ))
+    } )
+    .catch(err => reject(err));
   });
 }
 export function queryOne<T>(pool: Pool, sql: string, args?: any[], m?: StringMap, fields?: string[]): Promise<T> {

@@ -1,4 +1,4 @@
-import {Pool} from 'mysql';
+import {Pool} from 'mysql2/promise';
 import {User} from '../../models/User';
 import {exec, execute, query, queryOne, StringMap} from './mysql';
 
@@ -9,26 +9,26 @@ export class SqlUserService {
   constructor(private pool: Pool) {
   }
   all(): Promise<User[]> {
-    return query<User>(this.pool, 'select * from users order by id ASC', undefined, dateMap);
+    return query<User>(this.pool, 'SELECT * FROM users ORDER BY id ASC', undefined, dateMap);
   }
   load(id: string): Promise<User> {
-    return queryOne(this.pool, 'select * from users where id = ?', [id], dateMap);
+    return queryOne(this.pool, 'SELECT * FROM users WHERE id = ?', [id], dateMap);
   }
   insert(user: User): Promise<number> {
-    return exec(this.pool, `insert into users (id, username, email, phone, date_of_birth) values (?, ?, ?, ?, ?)`,
+    return exec(this.pool, `INSERT INTO users (id, username, email, phone, date_of_birth) VALUES (?, ?, ?, ?, ?)`,
      [user.id, user.username, user.email, user.phone, user.dateOfBirth]);
   }
   update(user: User): Promise<number> {
-    return exec(this.pool, `update users SET username=?, email=?, phone=?, date_of_birth= ? where id = ?`,
+    return exec(this.pool, `UPDATE users SET username=?, email=?, phone=?, date_of_birth= ? WHERE id = ?`,
      [user.username, user.email, user.phone, user.dateOfBirth, user.id]);
   }
   delete(id: string): Promise<number> {
-    return exec(this.pool, `delete from users where id = ?`, [id]);
+    return exec(this.pool, `DELETE FROM users WHERE id = ?`, [id]);
   }
-  transaction(users: User[]): Promise<number> {
+  transaction(users: User[]): Promise<number>{
     const statements = users.map((item) => {
-      return { query: `insert into users (id, username, email) values (?, ?, ?);`, args: [item.id, item.username, item.email] };
-      //  return { query: `REPLACE INTO users (id, username, email) values(?, ?, ?);`, args: [item.id, item.username, item.email] };
+      return { query: `INSERT INTO users (id, username, email) VALUES (?,?,?);`, args: [item.id, item.username, item.email] };
+      //  return { query: `REPLACE INTO users (id, username, email) VALUES(?, ?, ?);`, args: [item.id, item.username, item.email] };
     });
     return execute(this.pool, statements);
   }

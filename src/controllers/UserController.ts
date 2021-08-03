@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
+import {Request, Response} from 'express';
 import { User } from 'models/User';
-import { UserService } from '../services/UserService';
+import {UserService} from '../services/UserService';
 
 export class UserController {
   constructor(private userService: UserService) {
@@ -59,36 +59,38 @@ export class UserController {
       return res.status(400).send('id cannot be empty');
     }
     this.userService.delete(id)
-      .then(result => {
-        if (result > 0) {
+      .then(result =>{
+        
+        if(result > 0){
           return res.status(200).json(result);
-        } else {
-          res.status(400).send('User not exist');
+        }
+        else{
+          res.status(400).send('User not exist')
         }
       })
       .catch(err => res.status(500).send(err));
   }
-  insertMany(req: Request, res: Response) {
+  insertMany(req: Request, res: Response){
     const users: User[] = [{
-      id: '1',
-      username: 'tony.stark',
-      email: 'tony.stark@gmail.com',
+      id: "1",
+      username: "tony.stark",
+      email: "tony.stark@gmail.com",
     },
     {
-      id: '2',
-      username: 'peter.parker',
-      email: 'peter.parker@gmail.com',
+      id: "2",
+      username: "peter.parker",
+      email: "peter.parker@gmail.com",
     },
     {
-      id: '2',
-      username: 'james.howlett',
-      email: 'james.howlett@gmail.com',
+      id: "2",
+      username: "james.howlett",
+      email: "james.howlett@gmail.com",
     },
     {
-      id: '4',
-      username: 'james.howlett',
-      email: 'james.howlett@gmail.com',
-    }];
+      id: "4",
+      username: "james.howlett",
+      email: "james.howlett@gmail.com",
+    }]
     this.userService.transaction(users)
       .then(result => res.status(200).json(result))
       .catch(err => res.status(500).send(err));

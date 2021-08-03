@@ -1,4 +1,4 @@
-import {Pool} from 'mysql';
+import {Pool} from 'mysql2/promise';
 import {ApplicationContext} from './context';
 import {UserController} from './controllers/UserController';
 import {SqlUserService} from './services/sql/SqlUserService';

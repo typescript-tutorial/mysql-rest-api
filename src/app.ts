@@ -1,10 +1,10 @@
-import { json } from 'body-parser';
+import {json} from 'body-parser';
 import dotenv from 'dotenv';
 import express from 'express';
 import http from 'http';
-import mysql from 'mysql';
-import { createContext } from './init';
-import { route } from './route';
+import mysql  from 'mysql2/promise';
+import {createContext} from './init';
+import {route} from './route';
 
 dotenv.config();
 
@@ -22,16 +22,28 @@ const pool = mysql.createPool({
   multipleStatements: true,
 });
 
-pool.getConnection((err, conn) => {
-  if (err) {
-    console.error('Failed to connect to MySQL.', err.message, err.stack);
+// pool.getConnection((err, conn) => {
+//   if(err){
+//     console.error('Failed to connect to MySQL.', err.message, err.stack)
+//   }
+//   if(conn){
+//     const ctx = createContext(pool);
+//     route(app, ctx);
+//     http.createServer(app).listen(port, () => {
+//       console.log('Start server at port ' + port);
+//     });
+//     console.log('Connected successfully to MySQL.')
+//   }
+// })
+pool.getConnection().then(()=> {
+  const ctx = createContext(pool);
+  route(app, ctx);
+  http.createServer(app).listen(port, () => {
+    console.log('Start server at port ' + port);
+  });
+  console.log('Connected successfully to MySQL.')
   }
-  if (conn) {
-    const ctx = createContext(pool);
-    route(app, ctx);
-    http.createServer(app).listen(port, () => {
-      console.log('Start server at port ' + port);
-    });
-    console.log('Connected successfully to MySQL.');
-  }
-});
+)
+.catch(err => console.error('Failed to connect to MySQL.', err.message, err.stack));
+
+
