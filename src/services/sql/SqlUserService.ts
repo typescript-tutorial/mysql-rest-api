@@ -1,6 +1,6 @@
 import {Pool} from 'mysql';
 import {User} from '../../models/User';
-import {exec, execute, query, queryOne, StringMap} from './mysql';
+import {exec, execBatch, query, queryOne, StringMap} from './mysql';
 
 export const dateMap: StringMap = {
   date_of_birth: 'dateOfBirth',
@@ -27,9 +27,9 @@ export class SqlUserService {
   }
   transaction(users: User[]): Promise<number> {
     const statements = users.map((item) => {
-      return { query: `insert into users (id, username, email) values (?, ?, ?);`, args: [item.id, item.username, item.email] };
+      return { query: `insert into users (id, username, email) values (?, ?, ?);`, params: [item.id, item.username, item.email] };
       //  return { query: `REPLACE INTO users (id, username, email) values(?, ?, ?);`, args: [item.id, item.username, item.email] };
     });
-    return execute(this.pool, statements);
+    return execBatch(this.pool, statements, true);
   }
 }
