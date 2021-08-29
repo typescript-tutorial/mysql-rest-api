@@ -171,7 +171,6 @@ export function buildToSaveBatch<T>(objs: T[], table: string, attrs: Attributes,
     buildParam = param;
   }
   const sts: Statement[] = [];
-  const meta = metadata(attrs);
   const ks = Object.keys(attrs);
   for (const obj of objs) {
     let i = 1;
@@ -254,11 +253,11 @@ export function buildToSaveBatch<T>(objs: T[], table: string, attrs: Attributes,
     }
     if (colSet.length === 0) {
       const q = `insert ignore into ${table}(${cols.join(',')})values(${values.join(',')});`;
-      const smt = { query: q, args };
+      const smt: Statement = { query: q, params: args };
       sts.push(smt);
     } else {
       const q = `insert into ${table}(${cols.join(',')})values(${values.join(',')}) on duplicate key update ${colSet.join(',')};`;
-      const smt = { query: q, args };
+      const smt: Statement = { query: q, params: args };
       sts.push(smt);
     }
   }
